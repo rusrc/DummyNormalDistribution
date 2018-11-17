@@ -1,7 +1,5 @@
-from flask import jsonify
 from typing import List
 from DummyThreads.DummyThread import DummyThread
-from Models import ItemNormal
 
 
 class NormalThreadManager:
@@ -18,10 +16,10 @@ class NormalThreadManager:
         for thread in self.normal_threads:
             thread.restart(mean, standard_dev)
 
-    def get_normals(self) -> jsonify:
+    def get_normals(self) -> [float]:
         result = []
         for thread in self.normal_threads:
             var_normal = thread.get_normal()
             result.append(var_normal)
 
-        return jsonify(result)
+        return result

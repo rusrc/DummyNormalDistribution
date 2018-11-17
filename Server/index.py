@@ -12,16 +12,37 @@ app = Flask(__name__)
 thread_manager = NormalThreadManager()
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def index():
-    if request.method == 'POST':
-        for element in generate_list(request.json):
-            thread_manager.add_thread(DummyThread())
-            print(element.get_mean(), element.get_standard_dev())
-        thread_manager.run()
-        return jsonify(request.json)
-    else:
-        return thread_manager.get_normals()
+    return 'Started'
+
+
+@app.route('/start', methods=['POST'])
+def start():
+    for element in generate_list(request.json):
+        var_mean = element.get_mean()
+        var_dev = element.get_standard_dev()
+        thread_manager.add_thread(DummyThread(var_mean, var_dev))
+        print(var_mean, var_dev)
+
+    thread_manager.run()
+    return jsonify(request.json)
+
+
+@app.route('/restart', methods=['POST'])
+def restart():
+    for element in generate_list(request.json):
+        var_mean = element.get_mean()
+        var_dev = element.get_standard_dev()
+        print(var_mean, var_dev)
+
+    thread_manager.restart(var_mean, var_dev)
+    return jsonify(request.json)
+
+
+@app.route('/get_normals', methods=['GET'])
+def get_normals():
+    return jsonify(thread_manager.get_normals())
 
 
 def generate_list(json_value: json) -> List[ItemNormal]:

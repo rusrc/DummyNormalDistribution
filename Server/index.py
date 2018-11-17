@@ -1,31 +1,36 @@
 from flask import Flask
-from threading import Thread
+from flask import request
+from flask import jsonify
+from typing import List
+import json
+from DummyThreads.NormalThreadManager import NormalThreadManager
+from DummyThreads.DummyThread import DummyThread
+from Models.ItemNormal import ItemNormal
 
-import time
 app = Flask(__name__)
 
-class DummyThread(Thread):
-    index = 0.0
+thread_manager = NormalThreadManager()
 
-    def run(self):
-        i = -5
-        while i < 5:
-            print('start sleep' + str(i))
-            time.sleep(1)
-            print('stop sleep' + str(i))
-            i = i + 0.01
-            self.index = i
 
-    def getIndex(self):
-        return str(self.index)
-
-dummyThread = DummyThread()
-dummyThread.start()
-
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return dummyThread.getIndex()
+    if request.method == 'POST':
+        for element in generate_list(request.json):
+            thread_manager.add_thread(DummyThread())
+            print(element.get_mean(), element.get_standard_dev())
+        thread_manager.run()
+        return jsonify(request.json)
+    else:
+        return thread_manager.get_normals()
+
+
+def generate_list(json_value: json) -> List[ItemNormal]:
+    normal_list: List[ItemNormal] = []
+    for element in json_value:
+        normal_list.append(ItemNormal(element['mean'], element['dev']))
+
+    return normal_list
+
 
 if __name__ == '__main__':
     app.run(debug=True)
-

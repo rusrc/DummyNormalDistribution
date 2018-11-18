@@ -6,6 +6,7 @@ import random
 
 class DummyThread(Thread):
     x = -5
+    max_range = 5
     _step: float = 0
     _mean: float = 0
     _standard_dev: float = 0
@@ -17,7 +18,7 @@ class DummyThread(Thread):
         Thread.__init__(self)
 
     def run(self):
-        while self.x < 5:
+        while self.x < self.max_range:
             time.sleep(random.randint(1, 1))
             self.x = self.x + self._step
 
@@ -28,9 +29,9 @@ class DummyThread(Thread):
         pass
 
     def get_normal(self) -> float:
-        return self._normal_distibution(self.x, self._mean, self._standard_dev)
+        return self._normal_distribution(self.x, self._mean, self._standard_dev)
 
-    def _normal_distibution(self, x, mean, standard_dev):
+    def _normal_distribution(self, x, mean, standard_dev):
         first = 1 / (standard_dev * math.sqrt(2 * math.pi))
         second = -(math.pow(x - mean, 2) / math.pow(2 * standard_dev, 2))
         result = first * math.exp(second)

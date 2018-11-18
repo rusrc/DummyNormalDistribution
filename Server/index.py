@@ -2,12 +2,14 @@ from flask import Flask
 from flask import request
 from flask import jsonify
 from typing import List
+from flask_cors import CORS
 import json
 from DummyThreads.NormalThreadManager import NormalThreadManager
 from DummyThreads.DummyThread import DummyThread
 from Models.ItemNormal import ItemNormal
 
 app = Flask(__name__)
+CORS(app)
 
 thread_manager = NormalThreadManager()
 

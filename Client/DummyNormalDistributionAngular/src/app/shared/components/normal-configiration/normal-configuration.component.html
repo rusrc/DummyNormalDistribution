@@ -1,0 +1,23 @@
+<div class="row">
+  <div class="col">
+    {{title || 'Title of normals'}}
+  </div>
+</div>
+<div class="row">
+  <div class="col-6">
+    <div class="card">
+      <div class="card-body">
+        <p class="card-title">Choose mean {{mean * step}}</p>
+        <p-slider [(ngModel)]="mean" [min]="-100" [max]="200" (onSlideEnd)="onMeanSelected($event)"></p-slider>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="card">
+      <div class="card-body">
+        <p class="card-title">Choose deviation {{dev * step}}</p>
+        <p-slider [(ngModel)]="dev" [min]="-100" [max]="200" (onSlideEnd)="onDevSelected($event)"></p-slider>
+      </div>
+    </div>
+  </div>
+</div>

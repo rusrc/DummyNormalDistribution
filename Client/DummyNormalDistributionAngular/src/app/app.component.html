@@ -1,11 +1,24 @@
-<h2>Chart</h2>
+<section class="container">
+  <div class="row">
+    <div class="col">
+      <h2>Chart</h2>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-6">
+      <svg class="chart"></svg>
+    </div>
+    <div class="col-lg-6">
 
-<div>
-  <p-slider [(ngModel)]="val" (onChange)="handleChange($event)" (onSlideEnd)="valueSelected($event)"></p-slider>
-</div>
-<br />
+      <app-normal-configuration *ngFor="let i of [0,1,2,4,5]; let i = index" 
+      (normalSelected)="onNormalSelected($event, i)">
+      </app-normal-configuration>
 
-
-<svg class="chart"></svg>
-
-
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <button (click)=start()>Start</button>
+    </div>
+  </div>
+</section>

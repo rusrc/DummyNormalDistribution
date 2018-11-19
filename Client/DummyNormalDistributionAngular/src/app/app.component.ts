@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
 import * as d3 from 'd3';
 import { NormalService } from './shared/services/normal/normal.service';
+
+declare var realTimeLineChart: any;
 
 @Component({
   selector: 'app-root',
@@ -12,210 +14,18 @@ export class AppComponent implements OnInit {
   title = 'app';
   val: number;
   dataCollection: Array<{ values: number[] }> = [];
-  data = [{
-    iteration: 1,
-    value: 0.0539909665131881
-  },
-  {
-    iteration: 2,
-    value: 0.0656158147746766
-  },
-  {
-    iteration: 3,
-    value: 0.0789501583008941
-  },
-  {
-    iteration: 4,
-    value: 0.0940490773768869
-  },
-  {
-    iteration: 5,
-    value: 0.110920834679456
-  },
-  {
-    iteration: 6,
-    value: 0.129517595665892
-  },
-  {
-    iteration: 7,
-    value: 0.149727465635745
-  },
-  {
-    iteration: 8,
-    value: 0.171368592047807
-  },
-  {
-    iteration: 9,
-    value: 0.194186054983213
-  },
-  {
-    iteration: 10,
-    value: 0.217852177032551
-  },
-  {
-    iteration: 11,
-    value: 0.241970724519143
-  },
-  {
-    iteration: 12,
-    value: 0.266085249898755
-  },
-  {
-    iteration: 13,
-    value: 0.289691552761483
-  },
-  {
-    iteration: 14,
-    value: 0.312253933366761
-  },
-  {
-    iteration: 15,
-    value: 0.3332246028918
-  },
-  {
-    iteration: 16,
-    value: 0.3520653267643
-  },
-  {
-    iteration: 17,
-    value: 0.368270140303323
-  },
-  {
-    iteration: 18,
-    value: 0.381387815460524
-  },
-  {
-    iteration: 19,
-    value: 0.391042693975456
-  },
-  {
-    iteration: 20,
-    value: 0.396952547477012
-  },
-  {
-    iteration: 21,
-    value: 0.398942280401433
-  },
-  {
-    iteration: 22,
-    value: 0.396952547477012
-  },
-  {
-    iteration: 23,
-    value: 0.391042693975456
-  },
-  {
-    iteration: 24,
-    value: 0.381387815460524
-  },
-  {
-    iteration: 25,
-    value: 0.368270140303323
-  },
-  {
-    iteration: 26,
-    value: 0.3520653267643
-  },
-  {
-    iteration: 27,
-    value: 0.3332246028918
-  },
-  {
-    iteration: 28,
-    value: 0.312253933366761
-  },
-  {
-    iteration: 29,
-    value: 0.289691552761483
-  },
-  {
-    iteration: 30,
-    value: 0.266085249898755
-  },
-  {
-    iteration: 31,
-    value: 0.241970724519143
-  },
-  {
-    iteration: 32,
-    value: 0.217852177032551
-  },
-  {
-    iteration: 33,
-    value: 0.194186054983213
-  },
-  {
-    iteration: 34,
-    value: 0.171368592047807
-  },
-  {
-    iteration: 35,
-    value: 0.149727465635745
-  },
-  {
-    iteration: 36,
-    value: 0.129517595665892
-  },
-  {
-    iteration: 37,
-    value: 0.110920834679456
-  },
-  {
-    iteration: 38,
-    value: 0.0940490773768869
-  },
-  {
-    iteration: 39,
-    value: 0.0789501583008941
-  },
-  {
-    iteration: 40,
-    value: 0.0656158147746766
-  },
-  {
-    iteration: 41,
-    value: 0.0539909665131881
-  }
-  ];
   interval;
+  lineArr = [];
+  chart: any;
 
-  constructor(private normalService: NormalService) { }
+  constructor(private normalService: NormalService, private ngZone: NgZone) { }
 
   ngOnInit(): void {
-    // this.draw(this.data);
+    this.chart = this.realTimeLineChart();
   }
 
   start() {
     this.startPolling();
-  }
-
-  startPolling() {
-    if (this.interval) {
-      clearInterval(this.interval);
-    }
-
-    let counter = 0;
-    this.interval = setInterval(() => {
-      // do your thing
-      const subc = this.normalService.getNormals().subscribe(result => {
-        console.log(result);
-        this.addCollection(result);
-        this.drawFromCollection();
-        subc.unsubscribe();
-      }, error => {
-        console.error(error);
-        subc.unsubscribe();
-      });
-
-      counter++;
-      if (counter === 10) {
-        clearInterval(this.interval);
-      }
-    }, 1000);
-  }
-
-  addCollection(values: number[]) {
-    this.dataCollection.push({ values: values });
   }
 
   onNormalSelected(normal, index) {
@@ -225,80 +35,194 @@ export class AppComponent implements OnInit {
     console.log(normal, index);
   }
 
-  drawFromCollection() {
-    const data = this.dataCollection
-      .map((d, i) => ({ iteration: i, value: d.values[0] }));
-    this.draw(data);
+  private startPolling() {
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
+    window.setInterval(this.draw.bind(this), 1000);
   }
 
-  draw(data: Array<{ iteration: number, value: number }>) {
-    console.log(data);
-    const margin = {
-      top: 10,
-      right: 10,
-      bottom: 20,
-      left: 25
-    };
-    const width = 550 - margin.left - margin.right;
-    const height = 350 - margin.top - margin.bottom;
+  private draw() {
+    const subc = this.normalService.getNormals().subscribe(result => {
+      const now = new Date();
+      const lineData = {
+        time: now,
+        a: result[0],
+        b: result[1],
+        c: result[2],
+        d: result[3],
+        e: result[4]
+      };
 
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
-    // set the ranges
-    const x = d3.scaleLinear().range([0, width]);
-    const y = d3.scaleLinear().range([height, 0]);
+      this.lineArr.push(lineData);
 
-    // define the line
-    const valueline = d3.line()
-      .x(function (d: any) {
-        return x(d.iteration);
-      })
-      .y(function (d: any) {
-        return y(d.value);
-      });
+      if (this.lineArr.length > 100) {
+        this.lineArr.shift();
+      }
 
-    // append the svg obgect to the body of the page
-    // appends a 'group' element to 'svg'
-    // moves the 'group' element to the top left margin
-    const svg = d3.select('svg')
-      .attr('width', (width + margin.left + margin.right) + '%')
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform',
-        'translate(' + margin.left + ',' + margin.top + ')');
+      d3.select('#chart').datum(this.lineArr).call(this.chart);
+      subc.unsubscribe();
 
-    // format the data
-    data.forEach(function (d) {
-      d.iteration = +d.iteration;
-      d.value = +d.value;
+    }, error => {
+      console.error(error);
+      subc.unsubscribe();
     });
 
-    // Scale the range of the data
-    x.domain(d3.extent(data, function (d) {
-      return d.iteration;
-    }));
-    y.domain([0, d3.max(data, function (d) {
-      return d.value;
-    })]);
+  }
 
-    // Add the valueline path.
-    svg.append('path')
-      .data([data])
-      .attr('class', 'line')
-      .attr('d', <any>valueline)
-      .style('stroke', (d, i) => color(i.toString()))
-      .style('fill', 'none')
-      .style('stroke-width', '2px');
+  private realTimeLineChart() {
+    let margin = { top: 20, right: 20, bottom: 20, left: 20 },
+      width = 500,
+      height = 400,
+      duration = 500,
+      color = d3.schemeCategory10;
 
+    function chart(selection): any {
+      // Based on https://bl.ocks.org/mbostock/3884955
+      selection.each(function (data) {
+        data = ['a', 'b', 'c', 'd', 'e']
+          .map(function (c) {
+            return {
+              label: c,
+              values: data.map(function (d) {
+                return { time: +d.time, value: d[c] };
+              })
+            };
+          });
 
-    // Add the X Axis
-    svg.append('g')
-      .attr('transform', 'translate(0,' + height + ')')
-      .call(d3.axisBottom(x));
+        const t = d3.transition().duration(duration).ease(d3.easeLinear),
+          x = d3.scaleTime().rangeRound([0, width - margin.left - margin.right]),
+          y = d3.scaleLinear().rangeRound([height - margin.top - margin.bottom, 0]),
+          z = d3.scaleOrdinal(color);
 
-    // Add the Y Axis
-    svg.append('g')
-      .call(d3.axisLeft(y));
+        const xMin = +d3.min(data, (c: any) => d3.min(c.values, (d: any) => d.time));
+        const xMax = new Date(new Date(d3.max(data, (c: any) => {
+          return d3.max(c.values, (d: any) => d.time);
+        })).getTime() - (duration * 2));
 
+        x.domain([xMin, xMax]);
+        y.domain([
+          +d3.min(data, (c: any) => d3.min(c.values, (d: any) => d.value)),
+          +d3.max(data, function (c: any) { return d3.max(c.values, function (d: any) { return d.value; }); })
+        ]);
+        z.domain(data.map(function (c) { return c.label; }));
 
+        const line = d3.line()
+          .curve(d3.curveBasis)
+          .x(function (d: any) { return x(d.time); })
+          .y(function (d: any) { return y(d.value); });
+
+        const _svg = d3.select(this).selectAll('svg').data([data]);
+        const gEnter = _svg.enter().append('svg').append('g');
+        gEnter.append('g').attr('class', 'axis x');
+        gEnter.append('g').attr('class', 'axis y');
+        gEnter.append('defs').append('clipPath')
+          .attr('id', 'clip')
+          .append('rect')
+          .attr('width', width - margin.left - margin.right)
+          .attr('height', height - margin.top - margin.bottom);
+        gEnter.append('g')
+          .attr('class', 'lines')
+          .attr('clip-path', 'url(#clip)')
+          .selectAll('.data').data(data).enter()
+          .append('path')
+          .attr('class', 'data');
+
+        const legendEnter = gEnter.append('g')
+          .attr('class', 'legend')
+          .attr('transform', 'translate(' + (width - margin.right - margin.left - 75) + ',25)');
+        legendEnter.append('rect')
+          .attr('width', 50)
+          .attr('height', 75)
+          .attr('fill', '#ffffff')
+          .attr('fill-opacity', 0.7);
+        legendEnter.selectAll('text')
+          .data(data).enter()
+          .append('text')
+          .attr('y', function (d, i) { return (i * 20) + 25; })
+          .attr('x', 5)
+          .attr('fill', function (d: any) { return z(d.label); });
+
+        const svg = selection.select('svg');
+        svg.attr('width', width).attr('height', height);
+        const g = svg.select('g')
+          .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+        g.select('g.axis.x')
+          .attr('transform', 'translate(0,' + (height - margin.bottom - margin.top) + ')')
+          .transition(t)
+          .call(d3.axisBottom(x).ticks(5));
+        g.select('g.axis.y')
+          .transition(t)
+          .attr('class', 'axis y')
+          .call(d3.axisLeft(y));
+
+        g.select('defs clipPath rect')
+          .transition(t)
+          .attr('width', width - margin.left - margin.right)
+          .attr('height', height - margin.top - margin.right);
+
+        g.selectAll('g path.data')
+          .data(data)
+          .style('stroke', function (d) { return z(d.label); })
+          .style('stroke-width', 1)
+          .style('fill', 'none')
+          .transition()
+          .duration(duration)
+          .ease(d3.easeLinear)
+          .on('start', tick);
+
+        g.selectAll('g .legend text')
+          .data(data)
+          .text(function (d) {
+            return d.label.toUpperCase() + ': ' + d.values[d.values.length - 1].value;
+          });
+
+        // For transitions https://bl.ocks.org/mbostock/1642874
+        function tick() {
+          d3.select(this)
+            .attr('d', function (d: any) { return line(d.values); })
+            .attr('transform', null);
+
+          const xMinLess = new Date(new Date(xMin).getTime() - duration);
+          d3.active(this)
+            .attr('transform', 'translate(' + x(xMinLess) + ',0)')
+            .transition()
+            .on('start', tick);
+        }
+      });
+    }
+
+    chart['margin'] = function (_: any) {
+      if (!arguments.length) { return margin; }
+      margin = _;
+      return chart;
+    };
+
+    chart['width'] = function (_) {
+      if (!arguments.length) { return width; }
+      width = _;
+      return chart;
+    };
+
+    chart['height'] = function (_) {
+      if (!arguments.length) { return height; }
+      height = _;
+      return chart;
+    };
+
+    chart['color'] = function (_) {
+      if (!arguments.length) { return color; }
+      color = _;
+      return chart;
+    };
+
+    chart['duration'] = function (_) {
+      if (!arguments.length) { return duration; }
+      duration = _;
+      return chart;
+    };
+
+    return chart;
   }
 }

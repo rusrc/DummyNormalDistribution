@@ -6,12 +6,12 @@
   </div>
   <div class="row">
     <div class="col-lg-6">
-      <svg class="chart"></svg>
+      <div id="chart"></div>
+      <!-- <svg class="chart"></svg> -->
     </div>
     <div class="col-lg-6">
 
-      <app-normal-configuration *ngFor="let i of [0,1,2,4,5]; let i = index" 
-      (normalSelected)="onNormalSelected($event, i)">
+      <app-normal-configuration *ngFor="let i of [0,1,2,4,5]; let i = index" (normalSelected)="onNormalSelected($event, i)">
       </app-normal-configuration>
 
     </div>

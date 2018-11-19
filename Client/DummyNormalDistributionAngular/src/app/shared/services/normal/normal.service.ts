@@ -19,6 +19,11 @@ export class NormalService {
     return this.http.post<INormal[]>(url, normals, { observe: 'response' });
   }
 
+  stop() {
+    const url = `${ROOT_HOST}/stop`;
+    return this.http.delete<string>(url);
+  }
+
   getNormals() {
     const url = `${ROOT_HOST}/get_normals`;
     return this.http.get<number[]>(url);

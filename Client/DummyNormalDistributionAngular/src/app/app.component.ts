@@ -1,8 +1,7 @@
-import { Component, OnInit, NgZone } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import * as d3 from 'd3';
 import { NormalService } from './shared/services/normal/normal.service';
-
-declare var realTimeLineChart: any;
+import { switchMap, catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -11,28 +10,85 @@ declare var realTimeLineChart: any;
 })
 export class AppComponent implements OnInit {
 
-  title = 'app';
-  val: number;
+  statusMessage: string;
   dataCollection: Array<{ values: number[] }> = [];
   interval;
   lineArr = [];
   chart: any;
+  normals = [
+    {
+      mean: 0,
+      dev: 1,
+      title: 'Standard deviation'
+    },
+    {
+      mean: 0.51,
+      dev: 1.5,
+      title: 'Something important'
+    },
+    {
+      dev: 0.2,
+      mean: 1.1,
+      title: 'Very important'
+    },
+    {
+      dev: 0.3,
+      mean: 0.9,
+      title: 'Is important too'
+    },
+    {
+      dev: 0.5,
+      mean: 1.2,
+      title: 'And this one'
+    }
+  ];
 
-  constructor(private normalService: NormalService, private ngZone: NgZone) { }
+  constructor(private normalService: NormalService) { }
 
-  ngOnInit(): void {
+  ngOnInit() {
     this.chart = this.realTimeLineChart();
+    // this.start();
   }
 
   start() {
-    this.startPolling();
+    if (!this.interval) {
+      this.startPolling();
+    }
+    this.normalService.start(this.normals).subscribe(response => {
+      if (response.ok) {
+        this.startPolling();
+      }
+    }, error => {
+      console.log(error);
+      this.restart();
+    });
+  }
+
+  restart() {
+    this.normalService.restart(this.normals).subscribe(console.log);
+  }
+
+  stop() {
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
+    this.normalService.stop().subscribe(response => {
+      console.log(response);
+    });
   }
 
   onNormalSelected(normal, index) {
+    this.normals = this.normals.map((e, i) => {
+      if (i === index) {
+        normal.title = e.title;
+        return normal;
+      }
+      return e;
+    });
     this.normalService.restart(normal).subscribe(data => {
 
     });
-    console.log(normal, index);
+    console.log(this.normals, normal, index);
   }
 
   private startPolling() {

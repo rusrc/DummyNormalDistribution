@@ -14,11 +14,13 @@ export class NormalConfigurationComponent implements OnInit {
   @Output() normalSelected: EventEmitter<INormal> = new EventEmitter<INormal>();
 
   step = 0.01;
-  mean: any = 0;
-  dev: any = 100;
+  @Input() mean: any = 0;
+  @Input() dev: any = 1;
   subject: Subject<INormal> = new Subject<INormal>();
 
   ngOnInit(): void {
+    this.mean *= 100;
+    this.dev *= 100;
     this.subject.pipe(
       debounceTime(1000)
     ).subscribe(normal => this.normalSelected.emit(normal));

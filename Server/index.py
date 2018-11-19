@@ -7,6 +7,7 @@ import json
 from DummyThreads.NormalThreadManager import NormalThreadManager
 from DummyThreads.DummyThread import DummyThread
 from Models.ItemNormal import ItemNormal
+from flask import Response
 
 app = Flask(__name__)
 CORS(app)
@@ -21,6 +22,9 @@ def index():
 
 @app.route('/start', methods=['POST'])
 def start():
+    if thread_manager.isRunning():
+        return 'Workers are busy. Request stop or restart'
+
     for element in generate_list(request.json):
         var_mean = element.get_mean()
         var_dev = element.get_standard_dev()
@@ -45,6 +49,14 @@ def restart():
 @app.route('/get_normals', methods=['GET'])
 def get_normals():
     return jsonify(thread_manager.get_normals())
+
+
+@app.route('/stop', methods=['DELETE'])
+def stop():
+    if thread_manager is not None:
+        thread_manager.stop()
+        return 'Workers stopped'
+    return Response("No running workers. Use start first.", status=503)
 
 
 def generate_list(json_value: json) -> List[ItemNormal]:

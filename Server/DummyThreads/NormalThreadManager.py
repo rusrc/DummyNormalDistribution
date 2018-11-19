@@ -14,7 +14,8 @@ class NormalThreadManager:
 
     def restart(self, mean, standard_dev):
         for thread in self.normal_threads:
-            thread.restart(mean, standard_dev)
+            if (thread.isAlive()):
+                thread.restart(mean, standard_dev)
 
     def get_normals(self) -> [float]:
         result = []
@@ -23,3 +24,14 @@ class NormalThreadManager:
             result.append(var_normal)
 
         return result
+
+    def stop(self):
+        for thread in self.normal_threads:
+            if thread.isAlive():
+                thread.stop()
+
+    def isRunning(self):
+        if len(self.normal_threads) > 0:
+            for thread in self.normal_threads:
+                if thread.isAlive():
+                    return True

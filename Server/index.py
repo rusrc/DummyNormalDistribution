@@ -17,22 +17,23 @@ thread_manager = NormalThreadManager()
 
 @app.route('/', methods=['GET'])
 def index():
-    return 'Started'
+    return jsonify({'message': 'Index'})
 
 
 @app.route('/start', methods=['POST'])
 def start():
-    if thread_manager.isRunning():
-        return 'Workers are busy. Request stop or restart'
+    if thread_manager.threadsExists():
+        thread_manager.run()
+    else:
+        for element in generate_list(request.json):
+            var_mean = element.get_mean()
+            var_dev = element.get_standard_dev()
+            thread = DummyThread(var_mean, var_dev)
+            thread_manager.add_thread(thread)
+            print(var_mean, var_dev)
 
-    for element in generate_list(request.json):
-        var_mean = element.get_mean()
-        var_dev = element.get_standard_dev()
-        thread_manager.add_thread(DummyThread(var_mean, var_dev))
-        print(var_mean, var_dev)
-
-    thread_manager.run()
-    return jsonify(request.json)
+        thread_manager.run()
+        return jsonify(request.json)
 
 
 @app.route('/restart', methods=['POST'])
@@ -55,7 +56,7 @@ def get_normals():
 def stop():
     if thread_manager is not None:
         thread_manager.stop()
-        return 'Workers stopped'
+        return Response("Workers stopped", status=205)
     return Response("No running workers. Use start first.", status=503)
 
 
@@ -68,4 +69,4 @@ def generate_list(json_value: json) -> List[ItemNormal]:
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, threaded=True)

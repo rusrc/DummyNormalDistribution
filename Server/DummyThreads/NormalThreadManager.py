@@ -8,10 +8,15 @@ class NormalThreadManager:
     def add_thread(self, thread: DummyThread):
         self.normal_threads.append(thread)
 
-    def run(self):
+    def run(self) -> bool:
+        if len(self.normal_threads) > 0:
+            return False
+
         for thread in self.normal_threads:
             if not thread.is_alive():
                 thread.start()
+
+        return True
 
     def restart(self, mean, standard_dev):
         for thread in self.normal_threads:
@@ -30,6 +35,7 @@ class NormalThreadManager:
         for thread in self.normal_threads:
             if thread.isAlive() is True:
                 thread.stop()
+            self.normal_threads.remove(thread)
 
     def threadsExists(self):
         return len(self.normal_threads) > 0

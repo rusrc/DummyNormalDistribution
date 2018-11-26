@@ -22,13 +22,15 @@ def index():
 
 @app.route('/start', methods=['POST'])
 def start():
-    if thread_manager.threadsExists():
-        thread_manager.run()
+    if thread_manager.threadsExists() and thread_manager.run():
+        return Response("Threads is running first call stop", status=205)
     else:
         for element in generate_list(request.json):
+
             var_mean = element.get_mean()
             var_dev = element.get_standard_dev()
             thread = DummyThread(var_mean, var_dev)
+
             thread_manager.add_thread(thread)
             print(var_mean, var_dev)
 

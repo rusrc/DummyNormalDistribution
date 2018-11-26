@@ -23,7 +23,6 @@ class DummyThread(Thread):
             print('sleep: ' + str(self.x))
             self.x = self.x + self._step
         print('Waked up: ' + str(self.x))
-        SystemExit()
 
     def restart(self, mean, standard_dev):
         self.x = -5
@@ -42,4 +41,3 @@ class DummyThread(Thread):
 
     def stop(self):
         self.x = self.max_range
-        SystemExit()
